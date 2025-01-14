@@ -1,55 +1,71 @@
-name: ci
+name: CI / CD
+
 on:
-    push:
-        branches:
-            - main
-    pull_request:
-        branches:
-            - main
+  push:
+    branches:
+      - main
+    tags: # Trigger on tags as well (for manual releases or hotfixes)
+      - 'v*'
+  pull_request:
+    branches:
+      - main
 
 jobs:
-    test:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-            - uses: actions/setup-node@v4
-            - uses: bahmutov/npm-install@v1
-            - run: npm run build-keycloak-theme
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - uses: bahmutov/npm-install@v1
+      - run: npm run build-keycloak-theme
 
-    check_if_version_upgraded:
-        name: Check if version upgrade
-        if: github.event_name == 'push'
-        runs-on: ubuntu-latest
-        needs: test
-        outputs:
-            from_version: ${{ steps.step1.outputs.from_version }}
-            to_version: ${{ steps.step1.outputs.to_version }}
-            is_upgraded_version: ${{ steps.step1.outputs.is_upgraded_version }}
-            is_pre_release: ${{steps.step1.outputs.is_pre_release }}
-        steps:
-            - uses: garronej/ts-ci@v2.1.5
-              id: step1
-              with:
-                  action_name: is_package_json_version_upgraded
-                  branch: ${{ github.head_ref || github.ref }}
+  check_if_version_upgraded:
+    name: Check if version upgrade
+    if: github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/') # Only on push to branch, not tags
+    runs-on: ubuntu-latest
+    needs: test
+    outputs:
+      from_version: ${{ steps.step1.outputs.from_version }}
+      to_version: ${{ steps.step1.outputs.to_version }}
+      is_upgraded_version: ${{ steps.step1.outputs.is_upgraded_version }}
+      is_pre_release: ${{ steps.step1.outputs.is_pre_release }}
+    steps:
+      - uses: garronej/ts-ci@v2.1.5
+        id: step1
+        with:
+          action_name: is_package_json_version_upgraded
+          branch: ${{ github.head_ref || github.ref }}
 
-    create_github_release:
-        runs-on: ubuntu-latest
-        needs: check_if_version_upgraded
-        if: needs.check_if_version_upgraded.outputs.is_upgraded_version == 'true'
-        steps:
-            - uses: actions/checkout@v4
-            - uses: actions/setup-node@v4
-            - uses: bahmutov/npm-install@v1
-            - run: npm run build-keycloak-theme
-            - uses: softprops/action-gh-release@v2
-              with:
-                  name: Release v${{ needs.check_if_version_upgraded.outputs.to_version }}
-                  tag_name: v${{ needs.check_if_version_upgraded.outputs.to_version }}
-                  target_commitish: ${{ github.head_ref || github.ref }}
-                  generate_release_notes: true
-                  draft: false
-                  prerelease: ${{ needs.check_if_version_upgraded.outputs.is_pre_release == 'true' }}
-                  files: dist_keycloak/keycloak-theme-*.jar
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  create_github_release:
+    runs-on: ubuntu-latest
+    needs: check_if_version_upgraded
+    if: needs.check_if_version_upgraded.outputs.is_upgraded_version == 'true' || startsWith(github.ref, 'refs/tags/') # Either version upgrade or tag push
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - uses: bahmutov/npm-install@v1
+      - run: npm run build-keycloak-theme
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref || format('v{0}', needs.check_if_version_upgraded.outputs.to_version) }} # Use tag if pushed, otherwise create tag based on version
+          release_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref || format('Release v{0}', needs.check_if_version_upgraded.outputs.to_version) }}
+          draft: false
+          prerelease: ${{ needs.check_if_version_upgraded.outputs.is_pre_release == 'true' && !startsWith(github.ref, 'refs/tags/') }} # Only set prerelease if it is not a tag push
+          generate_release_notes: true
+          target_commitish: ${{ github.sha }} # Use the commit SHA instead of branch name
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist_keycloak/keycloak-theme-*.jar
+          asset_name: keycloak-theme.jar # Keep a consistent name
+          asset_content_type: application/java-archive

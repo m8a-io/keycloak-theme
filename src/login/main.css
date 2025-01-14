@@ -1,0 +1,133 @@
+@import url(../assets/fonts/main.css);
+
+body {
+  font-family: Geist;
+}
+
+.pf-c-form-control {
+  border-radius: 3px;
+  background-color: #2f465a;
+  color: #c9c9c9;
+  font-size: 16px;
+  border-width: 0px;
+  outline: 0 !important;
+}
+
+.pf-c-form-control:hover {
+  border-bottom-color: green;
+}
+
+.pf-c-form-control:focus {
+  border-bottom-color: green !important;
+}
+
+.passwordButtonFix {
+  width: 100%;
+  display: flex;
+}
+
+button.kcFormPasswordVisibilityButtonClass:hover::after {
+  border-bottom-color: green;
+}
+
+button.kcFormPasswordVisibilityButtonClass:focus::after {
+  border-bottom-color: green;
+}
+  
+button.kcFormPasswordVisibilityButtonClass::after {
+  border-radius: 3px !important;
+  background-color: transparent !important;
+  font-size: 16px;
+  border-width: 0px !important;
+  outline: 0 !important;
+}
+
+button.kcFormPasswordVisibilityButtonClass {
+  z-index: 1;
+  background-color: transparent !important;
+  border-width: 0px !important;
+  outline: 0 !important;
+}
+
+
+.kcFormPasswordVisibilityIconShow {
+  color: #c9c9c9;
+}
+
+.kcFormPasswordVisibilityIconHide {
+  color: #c9c9c9;
+}
+
+.kcFormCardClass {
+  background-color: #0e293f;
+  box-shadow: var(--pf-global--BoxShadow--lg);
+  padding: 0 20px;
+  max-width: 450px;
+  border: 1px solid;
+  border-radius: 10px;
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.kcInfoAreaWrapperClass {
+  box-shadow: var(--pf-global--BoxShadow--lg);
+  padding: 0 20px;
+  max-width: 500px;
+  border: 1px solid;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+#kc-info-wrapper {
+  background-color: #2f465a;
+}
+
+.kcInputGroup {
+  border-radius: 3px;
+  background-color: #2f465a;
+  color: #c9c9c9;
+  font-size: 16px;
+  border-width: 0px;
+}
+
+input[type="checkbox"] {
+  appearance: none; /* Remove default appearance */
+  width: 16px; 
+  height: 16px;
+  border: 1px solid gray;
+  border-radius: 2px; 
+  cursor: pointer;
+  position: relative;
+ /* To position the pseudo-element */
+  outline: 0 !important;
+}
+
+input[type="checkbox"]::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 20%;
+  transform: translate(-50%, -50%) scale(0); /* Initially hidden */
+  width: 6px;
+  height: 10px;
+  border: solid green; /* Your desired color */
+  border-width: 0 3px 3px 0;
+  transform-origin: 100% 100%; /* For the checkmark animation */
+  opacity: 0;
+  transition: transform 0.2s, opacity 0.2s; /* Add smooth transitions */
+}
+
+input[type="checkbox"]:checked::before {
+  transform: translate(-50%, -50%) scale(1) rotate(45deg);
+  opacity: 1;
+}
+
+.checkbox span {
+  color: #c9c9c9;
+  padding-top: 1px;
+}
+
+.kcFormOptionsWrapperClass {
+  padding-top: 1px;
+}
+

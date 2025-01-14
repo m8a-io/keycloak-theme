@@ -7,7 +7,8 @@ export default defineConfig({
     plugins: [
         react(),
         keycloakify({
-            accountThemeImplementation: "none"
+            accountThemeImplementation: "none",
+            themeName: "m8-login-new"
         })
     ]
 });

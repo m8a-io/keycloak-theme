@@ -56,3 +56,29 @@ To release a new version **just update the `package.json` version and push**.
 
 To enable the workflow go to your fork of this repository on GitHub then navigate to:
 `Settings` > `Actions` > `Workflow permissions`, select `Read and write permissions`.
+
+
+To add to k8s install of keycloak.
+
+  initContainers:
+    - name: realm-ext-provider
+      image: curlimages/curl
+      imagePullPolicy: IfNotPresent
+      command:
+        - sh
+      args:
+        - -c
+        - |
+          curl -L -f -S -o /extensions/keycloak-theme.jar https://drive.google.com/uc?export=download&id=1bdZZe3lBk58RVoRkSoRGip6-43klFQ5e
+
+      volumeMounts:
+        - name: extensions
+          mountPath: /extensions
+ 
+  extraVolumeMounts:
+    - name: extensions
+      mountPath: /opt/bitnami/keycloak/providers
+
+  extraVolumes:
+    - name: extensions
+      emptyDir: {}
